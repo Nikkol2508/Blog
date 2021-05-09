@@ -1,4 +1,4 @@
-package Main.Model;
+package main.model;
 
 public enum ModerationStatus {
     NEW,

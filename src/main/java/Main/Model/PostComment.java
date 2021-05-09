@@ -1,4 +1,6 @@
-package Main.Model;
+package main.model;
+
+import main.model.Post;
 
 import javax.persistence.*;
 
