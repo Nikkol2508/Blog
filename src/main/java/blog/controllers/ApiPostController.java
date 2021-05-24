@@ -6,6 +6,7 @@ import blog.service.PostService;
 import blog.service.TagService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,8 +22,8 @@ public class ApiPostController {
     }
 
     @GetMapping("/post")
-    private PostResponse getPosts() {
-        return postService.getPosts();
+    private PostResponse getPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String mode) {
+        return postService.getPosts(offset, limit, mode);
     }
 
     @GetMapping("/tag")
