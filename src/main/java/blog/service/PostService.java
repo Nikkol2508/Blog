@@ -2,7 +2,6 @@ package blog.service;
 
 import blog.api.response.PostResponse;
 import blog.dto.PostsDTO;
-import blog.dto.UserDTO;
 import blog.model.ModerationStatus;
 import blog.model.Post;
 import blog.model.PostRepository;;
@@ -26,51 +25,54 @@ public class PostService {
 
     public PostResponse getPosts(Integer offset, Integer limit, String mode) {
         PostResponse postResponse = new PostResponse();
-        long time = System.currentTimeMillis();
-        int count = postRepository.countActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time);
-
-        Sort sort = Sort.by("time").descending();
-        switch (mode) {
-            case "early":
-                sort = Sort.by("time").ascending();
-                break;
-            case "popular":
-                sort = Sort.by("postComment").ascending(); //необходимо реализовать !!!!
-                break;
-            case "best":
-                sort = Sort.by("postVoters").ascending();  //необходимо реализовать !!!!
-                break;
-            case "recent":
-                sort = sort;
-                break;
-            default:
-                sort = sort;
-
-        }
-        Pageable pageable = PageRequest.of(offset/limit, limit, sort);
-        Page<Post> activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time, pageable);
 
         List<PostsDTO> posts = new ArrayList<>();
-        for (Post post : activePostsForPage) {
-            PostsDTO postsDTO = new PostsDTO();
-            postsDTO.setId(post.getId());
-            postsDTO.setTimestamp(post.getTime());
-            UserDTO userDTO = new UserDTO();
-            userDTO.setId(post.getUserId());
-            userDTO.setName(post.getUser().getName());
-            postsDTO.setUser(userDTO);
-            postsDTO.setTitle(post.getTitle());
-            int lengthAnnounce = (post.getText().length() > 120) ? 120 : post.getText().length();
-            String announce = post.getText().substring(0, lengthAnnounce) + "...";
-            postsDTO.setAnnounce(announce.replaceAll("\\<[^>]*>",""));
-            postsDTO.setLikeCount(post.getLikeCount());
-            postsDTO.setDislikeCount(post.getDisLikeCount());
-            postsDTO.setCommentCount(post.getCommentCount());
-            postsDTO.setViewCount(post.getViewCount());
-            posts.add(postsDTO);
+        Object[] res = getActivePostsForPage(offset, limit, mode);
+        int count = (int) res[1];
+
+        if(count != 0) {
+            for (Post post : (Page<Post>)res[0]) {
+                posts.add(post.convertToPostDTO(post));
+            }
         }
         postResponse.setCount(count);
         postResponse.setPosts(posts);
         return postResponse;
     }
+
+    public Object[] getActivePostsForPage(Integer offset, Integer limit, String mode) {
+        long time = System.currentTimeMillis();
+        int count = 0;
+
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by("time").descending());
+        Page<Post> activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time, pageable);
+        switch (mode) {
+            case "early":
+                pageable = PageRequest.of(offset / limit, limit, Sort.by("time").ascending());
+                activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time, pageable);
+                count = postRepository.countActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time);
+                break;
+            case "popular":
+                pageable = PageRequest.of(offset / limit, limit);
+                activePostsForPage = postRepository.findAllActiveSortComments((byte) 1, "ACCEPTED", time, pageable);
+                count = postRepository.countSelected((byte) 1, "ACCEPTED", time);
+                break;
+            case "best":
+                //sort = Sort.by("postVoters").ascending();  //необходимо реализовать !!!!
+                break;
+            case "recent":
+
+            default:
+                pageable = PageRequest.of(offset / limit, limit, Sort.by("time").descending());
+                activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time, pageable);
+                count = postRepository.countActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time);
+
+        }
+
+        Object[] res = new Object[2];
+        res[0] = activePostsForPage;
+        res[1] = count;
+        return res;
+    }
+
 }

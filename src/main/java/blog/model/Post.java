@@ -1,5 +1,8 @@
 package blog.model;
 
+import blog.dto.PostsDTO;
+import blog.dto.UserDTO;
+
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -58,6 +61,8 @@ public class Post {
     @OneToMany(mappedBy = "post")
     private Set<PostComment> postComment;
 
+    public static final int MAX_ANNOUNCE_LENGTH = 120;
+
     public int getLikeCount() {
         AtomicInteger res = new AtomicInteger();
         postVoters.iterator().forEachRemaining(pv -> {
@@ -74,6 +79,25 @@ public class Post {
             if(voter == -1) res.getAndIncrement();
         });
         return res.get();
+    }
+
+    public PostsDTO convertToPostDTO(Post post) {
+        PostsDTO postsDTO = new PostsDTO();
+        postsDTO.setId(post.getId());
+        postsDTO.setTimestamp(post.getTime());
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(post.getUserId());
+        userDTO.setName(post.getUser().getName());
+        postsDTO.setUser(userDTO);
+        postsDTO.setTitle(post.getTitle());
+        int lengthAnnounce = Math.min(post.getText().length(), MAX_ANNOUNCE_LENGTH);
+        String announce = post.getText().substring(0, lengthAnnounce) + "...";
+        postsDTO.setAnnounce(announce.replaceAll("\\<[^>]*>", ""));
+        postsDTO.setLikeCount(post.getLikeCount());
+        postsDTO.setDislikeCount(post.getDisLikeCount());
+        postsDTO.setCommentCount(post.getCommentCount());
+        postsDTO.setViewCount(post.getViewCount());
+        return postsDTO;
     }
 
     public int getCommentCount() {
@@ -151,7 +175,6 @@ public class Post {
     public void setViewCount(int viewCount) {
         this.viewCount = viewCount;
     }
-
 
     public User getUser() {
         return user;
