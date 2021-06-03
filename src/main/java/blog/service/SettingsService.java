@@ -2,7 +2,7 @@ package blog.service;
 
 import blog.api.response.SettingsResponse;
 import blog.model.GlobalSetting;
-import blog.model.GlobalSettingRepository;
+import blog.repositorys.GlobalSettingRepository;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
