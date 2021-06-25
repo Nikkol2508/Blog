@@ -2,7 +2,6 @@ package blog.service;
 
 import blog.api.response.PostResponse;
 import blog.dto.PostsDTO;
-import blog.dto.PostsSelectedDTO;
 import blog.dto.UserDTO;
 import blog.model.ModerationStatus;
 import blog.model.Post;
@@ -14,66 +13,56 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PostService {
 
     private final PostRepository postRepository;
     public static final int MAX_ANNOUNCE_LENGTH = 120;
+    public static final byte IS_ACTIVE = 1;
+    public static final String MODERATION_STSTUS = "ACCEPTED";
 
     public PostService(PostRepository postRepository) {
         this.postRepository = postRepository;
     }
 
     public PostResponse getPosts(Integer offset, Integer limit, String mode) {
-        PostResponse postResponse = new PostResponse();
 
-        List<PostsDTO> posts = new ArrayList<>();
-        PostsSelectedDTO res = getActivePostsForPage(offset, limit, mode);
-        int count = res.getCount();
+        long time = System.currentTimeMillis();
+        int count = postRepository.countActiveByIsActiveAndModerationStatusAndTimeLessThan(IS_ACTIVE, ModerationStatus.ACCEPTED, time);
+
+        List<Post> activePostsForPage = new ArrayList<>();
 
         if(count != 0) {
-            for (Post post : res.getPosts()) {
-                posts.add(convertToPostDTO(post));
+            Pageable pageable;
+            switch (mode) {
+                case "early":
+                    pageable = PageRequest.of(offset / limit, limit, Sort.by("time").ascending());
+                    activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan(IS_ACTIVE, ModerationStatus.ACCEPTED, time, pageable);
+                    break;
+                case "popular":
+                    pageable = PageRequest.of(offset / limit, limit);
+                    activePostsForPage = postRepository.findAllActiveSortComments(IS_ACTIVE, MODERATION_STSTUS, time, pageable);
+                    break;
+                case "best":
+                    pageable = PageRequest.of(offset / limit, limit);
+                    activePostsForPage = postRepository.findAllActiveSortVoters(IS_ACTIVE, MODERATION_STSTUS, time, pageable);
+                    break;
+                case "recent":
+                default:
+                    pageable = PageRequest.of(offset / limit, limit, Sort.by("time").descending());
+                    activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan(IS_ACTIVE, ModerationStatus.ACCEPTED, time, pageable);
             }
+
         }
+
+        PostResponse postResponse = new PostResponse();
         postResponse.setCount(count);
-        postResponse.setPosts(posts);
+        postResponse.setPosts(activePostsForPage.stream().map(this::convertToPostDTO).collect(Collectors.toList()));
         return postResponse;
     }
 
-    public PostsSelectedDTO getActivePostsForPage(Integer offset, Integer limit, String mode) {
-        long time = System.currentTimeMillis();
-        int count = postRepository.countActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time);
-
-        Pageable pageable;
-        List<Post> activePostsForPage;
-        switch (mode) {
-            case "early":
-                pageable = PageRequest.of(offset / limit, limit, Sort.by("time").ascending());
-                activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time, pageable);
-                break;
-            case "popular":
-                pageable = PageRequest.of(offset / limit, limit);
-                activePostsForPage = postRepository.findAllActiveSortComments(time, pageable);
-                //activePostsForPage = postRepository.findAllActiveSortComments(time, pageable);
-                //activePostsForPage = postRepository.findAllActiveSortComments((byte) 1, "ACCEPTED", time, pageable);
-                break;
-            case "best":
-                pageable = PageRequest.of(offset / limit, limit);
-                activePostsForPage = postRepository.findAllActiveSortVoters((byte) 1, "ACCEPTED", time, pageable);
-                break;
-            case "recent":
-            default:
-                pageable = PageRequest.of(offset / limit, limit, Sort.by("time").descending());
-                activePostsForPage = postRepository.findAllActiveByIsActiveAndModerationStatusAndTimeLessThan((byte) 1, ModerationStatus.ACCEPTED, time, pageable);
-        }
-
-        PostsSelectedDTO res = new PostsSelectedDTO();
-        res.setPosts(activePostsForPage);
-        res.setCount(count);
-        return res;
-    }
 
     public PostsDTO convertToPostDTO(Post post) {
         PostsDTO postsDTO = new PostsDTO();
@@ -86,7 +75,7 @@ public class PostService {
         postsDTO.setTitle(post.getTitle());
         int lengthAnnounce = Math.min(post.getText().length(), MAX_ANNOUNCE_LENGTH);
         String announce = post.getText().substring(0, lengthAnnounce) + "...";
-        postsDTO.setAnnounce(announce.replaceAll("\\<[^>]*>", ""));
+        postsDTO.setAnnounce(announce.replaceAll("<[^>]*>", ""));
         postsDTO.setLikeCount(post.getLikeCount());
         postsDTO.setDislikeCount(post.getDisLikeCount());
         postsDTO.setCommentCount(post.getCommentCount());
