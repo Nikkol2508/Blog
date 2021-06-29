@@ -1,21 +1,21 @@
 package blog.api.response;
 
-import blog.dto.TagDTO;
+import blog.dto.TagDTOInter;
 
 import java.util.List;
 
 public class TagResponse {
 
-    private List<TagDTO> tags;
+    private List<TagDTOInter> tags;
 
     public TagResponse() {
     }
 
-    public List<TagDTO> getTags() {
+    public List<TagDTOInter> getTags() {
         return tags;
     }
 
-    public void setTags(List<TagDTO> tags) {
+    public void setTags(List<TagDTOInter> tags) {
         this.tags = tags;
     }
 }
