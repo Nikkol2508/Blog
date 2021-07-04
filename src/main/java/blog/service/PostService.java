@@ -63,6 +63,21 @@ public class PostService {
         return postResponse;
     }
 
+    public PostResponse getSearchPosts(Integer offset, Integer limit, String query) {
+        long time = System.currentTimeMillis();
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        PostResponse postResponse = new PostResponse();
+        List<Post> postsForPage = new ArrayList<>();
+        if(query.matches("\\s*")) postResponse = getPosts(offset, limit, "recent");
+        else {
+            query = "%" + query + "%";
+            postsForPage = postRepository.searchByRequest(IS_ACTIVE, MODERATION_STSTUS, time, query, pageable);
+            postResponse.setPosts(postsForPage.stream().map(this::convertToPostDTO).collect(Collectors.toList()));
+            postResponse.setCount(postsForPage.size());
+        }
+        return postResponse;
+    }
+
 
     public PostsDTO convertToPostDTO(Post post) {
         PostsDTO postsDTO = new PostsDTO();
