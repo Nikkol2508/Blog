@@ -68,9 +68,10 @@ public class PostService {
         Pageable pageable = PageRequest.of(offset / limit, limit);
         PostResponse postResponse = new PostResponse();
         List<Post> postsForPage = new ArrayList<>();
-        if(query.matches("\\s*")) postResponse = getPosts(offset, limit, "recent");
+        if(query.matches("\\s*")) {
+            postResponse = getPosts(offset, limit, "recent");
+        }
         else {
-            query = "%" + query + "%";
             postsForPage = postRepository.searchByRequest(IS_ACTIVE, MODERATION_STSTUS, time, query, pageable);
             postResponse.setPosts(postsForPage.stream().map(this::convertToPostDTO).collect(Collectors.toList()));
             postResponse.setCount(postsForPage.size());
