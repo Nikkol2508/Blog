@@ -29,7 +29,7 @@ public class PostService {
 
     public PostResponse getPosts(Integer offset, Integer limit, String mode) {
 
-        long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis() / 1000;
         int count = postRepository.countActiveByIsActiveAndModerationStatusAndTimeLessThan(IS_ACTIVE, ModerationStatus.ACCEPTED, time);
 
         List<Post> activePostsForPage = new ArrayList<>();

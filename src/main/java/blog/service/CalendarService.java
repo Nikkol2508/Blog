@@ -1,28 +1,35 @@
 package blog.service;
 
 import blog.api.response.CalendarResponse;
+import blog.dto.CalendarDTOInterface;
+import blog.repositorys.PostRepository;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CalendarService {
-    public CalendarResponse getCalendar(Integer year) {
+
+    private final PostRepository postRepository;
+
+    public CalendarService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    public CalendarResponse getCalendar(int year) {
         CalendarResponse calendarResponse = new CalendarResponse();
-        List<Integer> years = new ArrayList<>();
-        years.add(LocalDate.now().getYear());
-        years.add(2020);
+        List<Integer> years = postRepository.getYears();
         calendarResponse.setYears(years);
-        HashMap<String, Integer> posts = new HashMap<>();
-        posts.put("2021-07-18", 5);
-        posts.put("2021-07-20", 12);
-        posts.put("2021-07-25", 3);
-        posts.put("2021-07-28", 8);
-        calendarResponse.setPosts(posts);
+        List<CalendarDTOInterface> calendarPosts= postRepository.calendarPosts(year);
+        HashMap<String, Integer> dateCount = new HashMap<>();
+        for(CalendarDTOInterface calendarPost : calendarPosts) {
+            dateCount.put(calendarPost.getDate(), calendarPost.getCount());
+        }
+
+        calendarResponse.setPosts(dateCount);
         return calendarResponse;
     }
 }

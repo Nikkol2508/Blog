@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api")
 public class ApiCalendarController {
@@ -19,7 +21,7 @@ public class ApiCalendarController {
     }
 
     @GetMapping("/calendar")
-    private ResponseEntity<CalendarResponse> getCalendar(@RequestParam Integer year) {
+    private ResponseEntity<CalendarResponse> getCalendar(@RequestParam int year) {
         return new ResponseEntity<>(calendarService.getCalendar(year), HttpStatus.OK);
     }
 

@@ -1,14 +1,18 @@
 package blog.repositorys;
 
+import blog.dto.CalendarDTOInterface;
 import blog.model.ModerationStatus;
 import blog.model.Post;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public interface PostRepository extends PagingAndSortingRepository<Post, Integer> {
@@ -40,8 +44,12 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
     List<Post> searchByRequest(@Param("isActive") byte isActive, @Param("moderationStatus")
             String moderationStatus, @Param("time") long time, @Param("query") String query, Pageable pageable);
 
-//    @Query(value = "", nativeQuery = true)
-//    List<long> minAndMaxDate();
+    @Query(value = "SELECT DISTINCT YEAR(FROM_UNIXTIME(time)) FROM posts", nativeQuery = true)
+    List<Integer> getYears();
+
+    @Query(value = "SELECT DATE(FROM_UNIXTIME(time)) AS date, COUNT(time) AS count FROM posts " +
+            "WHERE YEAR(FROM_UNIXTIME(`time`)) = :year  GROUP BY date\n", nativeQuery = true)
+    List<CalendarDTOInterface> calendarPosts(@Param("year") int year);
 
 
 }
