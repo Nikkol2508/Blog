@@ -44,12 +44,25 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
     List<Post> searchByRequest(@Param("isActive") byte isActive, @Param("moderationStatus")
             String moderationStatus, @Param("time") long time, @Param("query") String query, Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT YEAR(FROM_UNIXTIME(time)) FROM posts", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT YEAR(FROM_UNIXTIME(time)) FROM posts " +
+            "WHERE is_active = 1 AND moderation_status = 'ACCEPTED' " +
+            "AND posts.time < UNIX_TIMESTAMP(NOW())", nativeQuery = true)
     List<Integer> getYears();
 
     @Query(value = "SELECT DATE(FROM_UNIXTIME(time)) AS date, COUNT(time) AS count FROM posts " +
-            "WHERE YEAR(FROM_UNIXTIME(`time`)) = :year  GROUP BY date\n", nativeQuery = true)
+            "WHERE YEAR(FROM_UNIXTIME(`time`)) = :year AND is_active = 1 AND moderation_status = 'ACCEPTED' " +
+            "AND posts.time < UNIX_TIMESTAMP(NOW()) GROUP BY date", nativeQuery = true)
     List<CalendarDTOInterface> calendarPosts(@Param("year") int year);
 
+    @Query(value = "SELECT posts.* FROM posts WHERE DATE(FROM_UNIXTIME(time)) = :date " +
+            "AND is_active = 1 AND moderation_status = 'ACCEPTED' " +
+            "AND posts.time < UNIX_TIMESTAMP(NOW())\n", nativeQuery = true)
+    List<Post> getPostsByDate(@Param("date") String date, Pageable pageable);
+
+    @Query(value = "SELECT posts.* FROM posts JOIN tag2post ON posts.id = tag2post.post_id " +
+            "JOIN tags ON tags.id = tag2post.tag_id WHERE tags.name = :tag " +
+            "AND is_active = 1 AND moderation_status = 'ACCEPTED' " +
+            "AND posts.time < UNIX_TIMESTAMP(NOW())", nativeQuery = true)
+    List<Post> getPostsByTag(@Param("tag") String tag, Pageable pageable);
 
 }

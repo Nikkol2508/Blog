@@ -24,7 +24,9 @@ public class ApiPostController {
     }
 
     @GetMapping("/post")
-    private ResponseEntity<PostResponse> getPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String mode) {
+    private ResponseEntity<PostResponse> getPosts(@RequestParam Integer offset,
+                                                  @RequestParam Integer limit,
+                                                  @RequestParam String mode) {
         return new ResponseEntity<>(postService.getPosts(offset, limit, mode), HttpStatus.OK);
     }
 
@@ -34,7 +36,23 @@ public class ApiPostController {
     }
 
     @GetMapping("/post/search")
-    private ResponseEntity<PostResponse> getSearchPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String query) {
+    private ResponseEntity<PostResponse> getSearchPosts(@RequestParam Integer offset,
+                                                        @RequestParam Integer limit,
+                                                        @RequestParam String query) {
         return new ResponseEntity<>(postService.getSearchPosts(offset, limit, query), HttpStatus.OK);
+    }
+
+    @GetMapping("/post/byDate")
+    private ResponseEntity<PostResponse> getPostsByDate(@RequestParam Integer offset,
+                                                        @RequestParam Integer limit,
+                                                        @RequestParam String date) {
+        return new ResponseEntity<>(postService.getPostsByDate(offset, limit, date), HttpStatus.OK);
+    }
+
+    @GetMapping("/post/byTag")
+    private ResponseEntity<PostResponse> getPostsByTag(@RequestParam Integer offset,
+                                                        @RequestParam Integer limit,
+                                                        @RequestParam String tag) {
+        return new ResponseEntity<>(postService.getPostsByTag(offset, limit, tag), HttpStatus.OK);
     }
 }

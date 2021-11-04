@@ -64,10 +64,10 @@ public class PostService {
     }
 
     public PostResponse getSearchPosts(Integer offset, Integer limit, String query) {
-        long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis() / 1000;
         Pageable pageable = PageRequest.of(offset / limit, limit);
         PostResponse postResponse = new PostResponse();
-        List<Post> postsForPage = new ArrayList<>();
+        List<Post> postsForPage;
         if(query.matches("\\s*")) {
             postResponse = getPosts(offset, limit, "recent");
         }
@@ -99,4 +99,21 @@ public class PostService {
         return postsDTO;
     }
 
+    public PostResponse getPostsByDate(Integer offset, Integer limit, String date) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        PostResponse postResponse = new PostResponse();
+        List<Post> postsForPage = postRepository.getPostsByDate(date, pageable);
+        postResponse.setPosts(postsForPage.stream().map(this::convertToPostDTO).collect(Collectors.toList()));
+        postResponse.setCount(postsForPage.size());
+        return postResponse;
+    }
+
+    public PostResponse getPostsByTag(Integer offset, Integer limit, String tag) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        PostResponse postResponse = new PostResponse();
+        List<Post> postsForPage = postRepository.getPostsByTag(tag, pageable);
+        postResponse.setPosts(postsForPage.stream().map(this::convertToPostDTO).collect(Collectors.toList()));
+        postResponse.setCount(postsForPage.size());
+        return postResponse;
+    }
 }
