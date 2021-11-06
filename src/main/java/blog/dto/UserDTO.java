@@ -1,26 +1,18 @@
 package blog.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+
+@Data
 public class UserDTO {
 
     private int id;
     private String name;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String photo;
+
     public UserDTO() {
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 }

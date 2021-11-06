@@ -2,14 +2,12 @@ package blog.controllers;
 
 import blog.api.response.PostResponse;
 import blog.api.response.TagResponse;
+import blog.dto.PostsDTO;
 import blog.service.PostService;
 import blog.service.TagService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -28,6 +26,11 @@ public class ApiPostController {
                                                   @RequestParam Integer limit,
                                                   @RequestParam String mode) {
         return new ResponseEntity<>(postService.getPosts(offset, limit, mode), HttpStatus.OK);
+    }
+
+    @GetMapping("/post/{ID}")
+    private ResponseEntity<PostsDTO> getPost(@PathVariable("ID") int id) {
+        return new ResponseEntity<>(postService.getPost(id), HttpStatus.OK);
     }
 
     @GetMapping("/tag")

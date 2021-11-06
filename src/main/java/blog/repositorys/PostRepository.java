@@ -3,13 +3,17 @@ package blog.repositorys;
 import blog.dto.CalendarDTOInterface;
 import blog.model.ModerationStatus;
 import blog.model.Post;
+import org.hibernate.annotations.SQLUpdate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.PostUpdate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +27,8 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
 
     int countActiveByIsActiveAndModerationStatusAndTimeLessThan(byte isActive, ModerationStatus moderationStatus,
                                                                 long time);
+
+    Post findById(int id);
 
     @Query(value = "SELECT posts.* FROM posts LEFT JOIN post_comments ON posts.id = post_comments.post_id " +
             "WHERE is_active = :isActive AND moderation_status = :moderationStatus AND posts.time < :time " +
@@ -64,5 +70,10 @@ public interface PostRepository extends PagingAndSortingRepository<Post, Integer
             "AND is_active = 1 AND moderation_status = 'ACCEPTED' " +
             "AND posts.time < UNIX_TIMESTAMP(NOW())", nativeQuery = true)
     List<Post> getPostsByTag(@Param("tag") String tag, Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE posts SET view_count = :viewCount WHERE id = :id", nativeQuery = true)
+    void setViewCount(@Param("id") int id, @Param("viewCount") int viewCount);
 
 }

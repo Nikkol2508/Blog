@@ -1,11 +1,15 @@
 package blog.service;
 
 import blog.api.response.PostResponse;
+import blog.dto.CommentDTO;
 import blog.dto.PostsDTO;
 import blog.dto.UserDTO;
 import blog.model.ModerationStatus;
 import blog.model.Post;
+import blog.model.PostComment;
+import blog.model.User;
 import blog.repositorys.PostRepository;
+import blog.repositorys.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,12 +23,52 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
     public static final int MAX_ANNOUNCE_LENGTH = 120;
     public static final byte IS_ACTIVE = 1;
     public static final String MODERATION_STSTUS = "ACCEPTED";
 
-    public PostService(PostRepository postRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
+    }
+
+    public PostsDTO getPost(int id) {
+        Post post = postRepository.findById(id);
+        PostsDTO postsDTO = new PostsDTO();
+        postsDTO.setId(post.getId());
+        postsDTO.setTimestamp(post.getTime());
+        postsDTO.setActive(post.getIsActive() != 0);
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(post.getUserId());
+        userDTO.setName(post.getUser().getName());
+        postsDTO.setUser(userDTO);
+        postsDTO.setTitle(post.getTitle());
+        postsDTO.setText(post.getText());
+        postsDTO.setLikeCount(post.getLikeCount());
+        postsDTO.setDislikeCount(post.getDisLikeCount());
+        postsDTO.setViewCount(post.getViewCount());
+        ArrayList<CommentDTO> commentDTOArrayList = new ArrayList<>();
+        for(PostComment postComment : post.getPostComment()) {
+            CommentDTO commentDTO = new CommentDTO();
+            commentDTO.setId(postComment.getId());
+            commentDTO.setTimestamp(postComment.getTime());
+            commentDTO.setText(postComment.getText());
+            User user = userRepository.findById(postComment.getUserId());
+            UserDTO commentUserDTO = new UserDTO();
+            commentUserDTO.setId(user.getId());
+            commentUserDTO.setName(user.getName());
+            commentUserDTO.setPhoto(user.getPhoto());
+            commentDTO.setUser(commentUserDTO);
+            commentDTOArrayList.add(commentDTO);
+        }
+        postsDTO.setComments(commentDTOArrayList);
+        postsDTO.setTags(post.getTags().stream().map(tag -> tag.getName()).collect(Collectors.toList()));
+
+        //После реализации авторизации добавить проверку на автора и модератора.
+        postRepository.setViewCount(id, post.getViewCount() + 1);
+
+        return postsDTO;
     }
 
     public PostResponse getPosts(Integer offset, Integer limit, String mode) {
@@ -116,4 +160,5 @@ public class PostService {
         postResponse.setCount(postsForPage.size());
         return postResponse;
     }
+
 }

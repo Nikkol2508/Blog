@@ -1,10 +1,8 @@
 package blog.model;
 
-import blog.dto.PostsDTO;
-import blog.dto.UserDTO;
-
 import javax.persistence.*;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,9 +47,9 @@ public class Post {
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "tag2post", joinColumns = {@JoinColumn(name = "post_id", columnDefinition = "INT NOT NULL")},
             inverseJoinColumns = {@JoinColumn(name = "tag_id", columnDefinition = "INT NOT NULL")})
-    private Set<Tag> tags = new HashSet<>();
+    private List<Tag> tags = new ArrayList<>();
 
-    public Set<Tag> getTags() {
+    public List<Tag> getTags() {
         return tags;
     }
 
@@ -60,6 +58,10 @@ public class Post {
 
     @OneToMany(mappedBy = "post")
     private Set<PostComment> postComment;
+
+    public Set<PostComment> getPostComment() {
+        return postComment;
+    }
 
     public int getLikeCount() {
         AtomicInteger res = new AtomicInteger();
